@@ -1,9 +1,10 @@
 import pandas as pd
 import xmltodict
-from PIL import Image
-from pyzbar.pyzbar import decode
+from zxing import BarCodeReader
 
 INVALID_BARCODE = -1
+
+barcode_reader = BarCodeReader()
 
 
 def parse_hazi_hinam(filename: str = 'hazi_hinam_dummy.xml') -> pd.DataFrame:
@@ -33,11 +34,9 @@ def decode_first_barcode(filename: str) -> int:
     :param filename: Path to an image file
     :return: First barcode decoded by pyzbar in the image
     """
-    image = Image.open(filename)
-    decoded = decode(image)
+    decoded = barcode_reader.decode(filename)
     try:
-        raw_barcode = decoded[0].data
-        return int(raw_barcode.decode('utf-8'))
+        return int(decoded.parsed)
     except TypeError:
         return INVALID_BARCODE
 
@@ -47,4 +46,3 @@ if __name__ == '__main__':
     prices = parse_hazi_hinam()
     barcode = decode_first_barcode('milk.jpg')
     print(get_product_name(prices, barcode))
-
