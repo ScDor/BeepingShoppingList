@@ -1,6 +1,7 @@
 import os
 from time import sleep
 
+import beepy
 import cv2
 import pandas as pd
 import xmltodict
@@ -66,7 +67,7 @@ def get_product_name(df: pd.DataFrame, item_code: int) -> str:
     """
     try:
         result = df[df['ItemCode'] == str(item_code)].iloc[0]['ItemName']
-        print('\a')  # beeps using system bell
+        beepy.beep(1)  # to be replaced with a linux system beep (print '\007')
         return result
     except IndexError:
         raise ProductException(f"Item {item_code} was not found in database")
@@ -127,7 +128,7 @@ def demo_images() -> None:
     shopping_list = ShoppingList()
 
     for picture in os.listdir('demo_pictures'):
-        print(f"Scanning item in {picture} --- ", end="")
+        print(f"Scanning item in {picture}")
         picture_path = os.path.join('demo_pictures', picture)
 
         try:
@@ -143,14 +144,11 @@ def demo_images() -> None:
         print()
 
 
-def demo_webcam(show_preview: bool = False):
+def demo_webcam(stream_number: int = 0):
     prices = parse_hazi_hinam()
     shopping_list = ShoppingList()
 
-    window_name = "preview"
-    cv2.namedWindow(window_name)
-
-    vc = cv2.VideoCapture(0)
+    vc = cv2.VideoCapture(stream_number)
 
     if vc.isOpened():  # try to get the first frame
         rval, frame = vc.read()
@@ -159,9 +157,6 @@ def demo_webcam(show_preview: bool = False):
 
     while rval:
         rval, frame = vc.read()
-
-        if show_preview:
-            cv2.imshow(window_name, frame)  # update webcam output
 
         try:
             cv2.imwrite(TEMP_FILENAME, frame)
@@ -176,8 +171,6 @@ def demo_webcam(show_preview: bool = False):
         except ProductException:
             # Could not detect an item
             pass
-
-    cv2.destroyWindow(window_name)
 
 
 if __name__ == '__main__':
