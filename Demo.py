@@ -4,7 +4,8 @@ import pandas as pd
 import xmltodict
 from zxing import BarCodeReader
 
-INVALID_BARCODE = -1
+COMMAND_EXIT = -1
+COMMAND_EMPTY_LIST = 0
 
 barcode_reader = BarCodeReader()
 
@@ -13,16 +14,19 @@ class ShoppingList:
     def __init__(self):
         self.products = {}
 
+    def __str__(self):
+        return "\n".join(
+            (f"{amount}\t{name}" for (name, amount) in self.products.items())
+        )
+
     def add_product(self, item: str):
         if item in self.products:
             self.products[item] += 1
         else:
             self.products[item] = 1
 
-    def __str__(self):
-        return "\n".join(
-            (f"{amount}\t{name}" for (name, amount) in self.products.items())
-        )
+    def empty(self):
+        self.products = {}
 
 
 class ProductException(BaseException):
@@ -71,17 +75,34 @@ def demo_input() -> None:
           "7290004127336, 7290000144474, 7290000311203, 7290004131074"
           "\n")
 
+    print("Type  0 to empty the list")
+    print("Type -1 to exit")
+
     # in real life, will output to some endpoint rather than print
     while True:
         try:
             barcode_raw = input("Scan an item to continue\t")
             barcode = int(barcode_raw)
-            product = get_product_name(prices, barcode)
-            shopping_list.add_product(product)
 
-            print('Beep!')
-            print(shopping_list)
-            print()
+            if barcode == COMMAND_EMPTY_LIST:
+                print("Shopping list emptied successfully")
+                shopping_list.empty()
+                continue
+
+            elif barcode == COMMAND_EXIT:
+                print("Here's your shopping list, goodbye!")
+                print("-" * 40)
+                print(shopping_list)
+                print("-" * 40)
+                exit(0)
+
+            else:
+                product = get_product_name(prices, barcode)
+                shopping_list.add_product(product)
+
+                print('Beep!')
+                print(shopping_list)
+                print()
 
         except TypeError:
             # for demo purposes only
